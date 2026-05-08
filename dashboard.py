@@ -1,249 +1,215 @@
 """
-PatentsView Technology Trends Dashboard
-Interactive dashboard for patent data analysis using Streamlit
+Patent Analytics Dashboard - OPTIMIZED for SPEED
+Loads from pre-generated CSV/JSON reports for instant performance (no database queries)
 """
 
 import streamlit as st
 import pandas as pd
-import json
-import sqlite3
 import plotly.express as px
-import plotly.graph_objects as go
+import json
 from pathlib import Path
-from datetime import datetime
 
-# Page configuration
 st.set_page_config(
-    page_title="Patent Analytics Dashboard",
+    page_title="PatentsView Technology Trends Dashboard",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# ════════════════════════════════════════════════════════════════════
+#  HEADER
+# ════════════════════════════════════════════════════════════════════
 st.markdown("""
-    <style>
-    .main-header {
-        font-size: 2.5rem;
-        color: #1f77b4;
-        margin-bottom: 1rem;
-    }
-    .metric-card {
-        background-color: #f0f2f6;
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        margin: 0.5rem 0;
-    }
-    </style>
+    <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; margin-bottom: 20px;'>
+        <h1 style='color: white; margin: 0;'>📊 Patent Analytics Dashboard</h1>
+        <p style='color: #e0e0e0; margin: 5px 0 0 0;'>USPTO PatentsView Pipeline Analysis</p>
+    </div>
 """, unsafe_allow_html=True)
 
-# Paths
-BASE_DIR = Path(__file__).parent
-DB_PATH = BASE_DIR / "patents.db"
-REPORTS_DIR = BASE_DIR / "Reports"
-REPORT_JSON = REPORTS_DIR / "patent_report.json"
+# ════════════════════════════════════════════════════════════════════
+#  LOAD REPORTS (FAST - FROM CSV FILES)
+# ════════════════════════════════════════════════════════════════════
+REPORTS_DIR = Path("Reports")
 
 @st.cache_data
-def load_data():
-    """Load data from database and JSON report."""
-    if not DB_PATH.exists():
-        st.error("Database not found. Please run data_pipeline.py first.")
-        return None, None
-    
-    con = sqlite3.connect(str(DB_PATH))
-    
-    # Load from database
-    patents_df = pd.read_sql("SELECT * FROM patents LIMIT 1000", con)
-    companies_df = pd.read_sql("SELECT * FROM companies", con)
-    technologies_df = pd.read_sql("SELECT * FROM technologies", con)
-    yearly_df = pd.read_sql("SELECT year, COUNT(*) AS patent_count FROM patents WHERE year IS NOT NULL GROUP BY year ORDER BY year", con)
-    top_companies_df = pd.read_sql(
-        "SELECT c.name, COUNT(pc.patent_id) AS patent_count FROM companies c JOIN patent_companies pc ON c.company_id = pc.company_id GROUP BY c.company_id ORDER BY patent_count DESC LIMIT 20",
-        con
-    )
-    
-    con.close()
-    
-    # Load JSON report
-    report_data = {}
-    if REPORT_JSON.exists():
-        with open(REPORT_JSON, 'r') as f:
-            report_data = json.load(f)
-    
-    return {
-        'patents': patents_df,
-        'companies': companies_df,
-        'technologies': technologies_df,
-        'yearly': yearly_df,
-        'top_companies': top_companies_df,
-        'report': report_data
-    }, report_data
+def load_csv(filename):
+    """Load CSV file with error handling"""
+    try:
+        return pd.read_csv(REPORTS_DIR / filename)
+    except FileNotFoundError:
+        st.error(f"❌ Missing: {filename}\nRun: `python data_pipeline.py --sample`")
+        return None
 
-# Main dashboard
-st.markdown("<div class='main-header'>📊 Patent Analytics Dashboard</div>", unsafe_allow_html=True)
-st.markdown("Interactive analysis of PatentsView technology trends data")
-st.markdown("---")
+@st.cache_data
+def load_json_report():
+    """Load JSON summary"""
+    try:
+        with open(REPORTS_DIR / "patent_report.json") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        st.warning("JSON report not found. Run data_pipeline.py first.")
+        return {}
 
-# Load data
-data, report = load_data()
+# Load all reports
+top_companies = load_csv("top_companies.csv")
+patents_yearly = load_csv("patents_per_year.csv")
+tech_sectors = load_csv("top_tech_sectors.csv")
+company_ranking = load_csv("company_ranking.csv")
+tech_by_decade = load_csv("tech_by_decade.csv")
+tech_growth = load_csv("tech_growth.csv")
+json_report = load_json_report()
 
-if data is None:
+if top_companies is None:
     st.stop()
 
-# Key metrics in columns
+# ════════════════════════════════════════════════════════════════════
+#  KEY METRICS
+# ════════════════════════════════════════════════════════════════════
+st.subheader("📈 Summary Statistics")
+
 col1, col2, col3, col4 = st.columns(4)
 
+stats = json_report.get('summary', {})
 with col1:
-    total_patents = report.get("total_patents", 0)
-    st.metric("Total Patents", f"{total_patents:,}")
-
+    st.metric("📋 Total Patents", f"{stats.get('total_patents', 0):,}")
 with col2:
-    total_companies = len(data['companies'])
-    st.metric("Companies/Assignees", f"{total_companies:,}")
-
+    st.metric("🏢 Companies", f"{stats.get('total_companies', 0):,}")
 with col3:
-    total_technologies = len(data['technologies'])
-    st.metric("Technology Records", f"{total_technologies:,}")
-
+    st.metric("⚙️ Tech Fields", f"{stats.get('total_technologies', 0):,}")
 with col4:
-    avg_year = int(data['patents']['year'].mean()) if 'year' in data['patents'].columns else "N/A"
-    st.metric("Avg Patent Year", avg_year)
+    date_gen = json_report.get('generated_at', 'N/A')
+    st.metric("📅 Report Date", date_gen[:10] if date_gen != 'N/A' else 'N/A')
 
-st.markdown("---")
+st.divider()
 
-# Tabs for different views
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["📈 Trends", "🏢 Top Companies", "🔬 Technologies", "📊 Data", "📋 Summary"])
+# ════════════════════════════════════════════════════════════════════
+#  TABS
+# ════════════════════════════════════════════════════════════════════
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    "🏢 Top Companies",
+    "📅 Year Trends",
+    "⚙️ Tech Sectors",
+    "📊 By Decade",
+    "🚀 Growth",
+    "🏆 Rankings"
+])
 
-# TAB 1: Trends
+# ════════════════════════════════════════════════════════════════════
+#  TAB 1: TOP COMPANIES
+# ════════════════════════════════════════════════════════════════════
 with tab1:
-    st.subheader("Patents Over Time")
-    
-    if not data['yearly'].empty:
-        fig = px.line(
-            data['yearly'],
-            x='year',
-            y='patent_count',
-            title="Patent Count by Year",
-            markers=True,
-            line_shape="spline"
-        )
-        fig.update_layout(
-            xaxis_title="Year",
-            yaxis_title="Number of Patents",
-            hovermode="x unified",
-            height=500
-        )
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Growth statistics
-        col1, col2 = st.columns(2)
-        with col1:
-            earliest_year = int(data['yearly']['year'].min())
-            latest_year = int(data['yearly']['year'].max())
-            st.info(f"**Time Range:** {earliest_year} - {latest_year}")
-        
-        with col2:
-            recent_avg = data['yearly'].tail(5)['patent_count'].mean()
-            st.success(f"**Recent Avg (last 5 years):** {recent_avg:.0f} patents/year")
-
-# TAB 2: Top Companies
-with tab2:
     st.subheader("Top 20 Companies by Patent Count")
     
-    if not data['top_companies'].empty:
+    if top_companies is not None and len(top_companies) > 0:
         fig = px.bar(
-            data['top_companies'],
-            x='patent_count',
-            y='name',
+            top_companies.head(20),
+            x=top_companies.columns[1],
+            y=top_companies.columns[0],
             orientation='h',
-            title="Top Companies by Patents",
-            color='patent_count',
-            color_continuous_scale='Blues'
+            color=top_companies.columns[1],
+            color_continuous_scale='Blues',
+            title="Top Companies"
         )
-        fig.update_layout(
-            xaxis_title="Number of Patents",
-            yaxis_title="Company Name",
-            height=600,
-            showlegend=False
-        )
+        fig.update_layout(yaxis={'categoryorder': 'total ascending'}, height=500, showlegend=False)
         st.plotly_chart(fig, use_container_width=True)
         
-        st.dataframe(data['top_companies'], use_container_width=True, hide_index=True)
+        st.dataframe(top_companies.head(15), use_container_width=True, hide_index=True)
 
-# TAB 3: Technologies
-with tab3:
-    st.subheader("Technology Analysis")
+# ════════════════════════════════════════════════════════════════════
+#  TAB 2: YEARLY TRENDS
+# ════════════════════════════════════════════════════════════════════
+with tab2:
+    st.subheader("Patents Filed Per Year")
     
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        tech_summary = data['technologies'].groupby('wipo_sector_title').size().reset_index(name='count')
-        tech_summary = tech_summary.sort_values('count', ascending=False).head(15)
+    if patents_yearly is not None and len(patents_yearly) > 0:
+        fig = px.line(
+            patents_yearly,
+            x=patents_yearly.columns[0],
+            y=patents_yearly.columns[1],
+            markers=True,
+            title="Patent Filing Trend",
+            labels={patents_yearly.columns[0]: 'Year', patents_yearly.columns[1]: 'Count'}
+        )
+        fig.update_layout(height=400, hovermode='x unified')
+        st.plotly_chart(fig, use_container_width=True)
         
-        if not tech_summary.empty:
-            fig = px.pie(
-                tech_summary,
-                values='count',
-                names='wipo_sector_title',
-                title="Distribution of Technology Sectors"
-            )
-            fig.update_layout(height=500)
-            st.plotly_chart(fig, use_container_width=True)
-    
-    with col2:
-        st.metric("Unique Tech Sectors", tech_summary.shape[0])
-        st.metric("Total Tech Records", len(data['technologies']))
+        # Statistics
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("First Year", int(patents_yearly.iloc[0, 0]))
+        with col2:
+            st.metric("Recent Year Count", int(patents_yearly.iloc[-1, 1]))
+        
+        st.dataframe(patents_yearly.tail(20), use_container_width=True, hide_index=True)
 
-# TAB 4: Data Explorer
+# ════════════════════════════════════════════════════════════════════
+#  TAB 3: TECHNOLOGY SECTORS
+# ════════════════════════════════════════════════════════════════════
+with tab3:
+    st.subheader("Top Technology Sectors")
+    
+    if tech_sectors is not None and len(tech_sectors) > 0:
+        fig = px.bar(
+            tech_sectors.head(15),
+            x=tech_sectors.columns[1],
+            y=tech_sectors.columns[0],
+            orientation='h',
+            color=tech_sectors.columns[1],
+            color_continuous_scale='Viridis',
+            title="Technology Sectors"
+        )
+        fig.update_layout(yaxis={'categoryorder': 'total ascending'}, height=500, showlegend=False)
+        st.plotly_chart(fig, use_container_width=True)
+        
+        st.dataframe(tech_sectors.head(20), use_container_width=True, hide_index=True)
+
+# ════════════════════════════════════════════════════════════════════
+#  TAB 4: BY DECADE
+# ════════════════════════════════════════════════════════════════════
 with tab4:
-    st.subheader("Data Explorer")
+    st.subheader("Patents by Decade")
     
-    view_option = st.radio("Select data to view:", ["Patents", "Companies", "Technologies"], horizontal=True)
-    
-    if view_option == "Patents":
-        st.write(f"**Showing first 100 of {len(data['patents'])} patents**")
-        st.dataframe(data['patents'].head(100), use_container_width=True, height=400)
-    
-    elif view_option == "Companies":
-        st.write(f"**All {len(data['companies'])} companies/assignees**")
-        st.dataframe(data['companies'], use_container_width=True, height=400)
-    
-    else:
-        st.write(f"**Showing first 100 of {len(data['technologies'])} technology records**")
-        st.dataframe(data['technologies'].head(100), use_container_width=True, height=400)
+    if tech_by_decade is not None and len(tech_by_decade) > 0:
+        fig = px.bar(
+            tech_by_decade,
+            x=tech_by_decade.columns[0],
+            y=tech_by_decade.columns[1],
+            color=tech_by_decade.columns[1],
+            color_continuous_scale='Oranges',
+            title="Decade Distribution"
+        )
+        fig.update_layout(height=400, showlegend=False)
+        st.plotly_chart(fig, use_container_width=True)
+        
+        st.dataframe(tech_by_decade, use_container_width=True, hide_index=True)
 
-# TAB 5: Summary Report
+# ════════════════════════════════════════════════════════════════════
+#  TAB 5: GROWTH ANALYSIS
+# ════════════════════════════════════════════════════════════════════
 with tab5:
-    st.subheader("Analysis Summary")
+    st.subheader("Technology Growth Analysis")
     
-    summary_cols = st.columns(2)
-    
-    with summary_cols[0]:
-        st.markdown("### Dataset Overview")
-        st.write(f"- **Total Patents:** {report.get('total_patents', 0):,}")
-        st.write(f"- **Total Companies:** {total_companies:,}")
-        st.write(f"- **Technology Records:** {total_technologies:,}")
-        st.write(f"- **Report Generated:** {report.get('generated_at', 'N/A')}")
-    
-    with summary_cols[1]:
-        st.markdown("### Data Quality")
-        null_patents = data['patents'].isnull().sum().sum()
-        null_companies = data['companies'].isnull().sum().sum()
-        st.write(f"- **Patent Records:** {len(data['patents']):,}")
-        st.write(f"- **Company Records:** {len(data['companies']):,}")
-        st.write(f"- **NULL values (Patents):** {null_patents}")
-        st.write(f"- **NULL values (Companies):** {null_companies}")
-    
-    st.markdown("---")
-    st.markdown("### Top Companies")
-    if report.get("top_companies"):
-        top_10 = pd.DataFrame(report["top_companies"][:10])
-        st.dataframe(top_10, use_container_width=True, hide_index=True)
+    if tech_growth is not None and len(tech_growth) > 0:
+        st.info("Shows fastest growing technology fields (recent vs historical)")
+        st.dataframe(tech_growth.head(25), use_container_width=True, hide_index=True)
 
-# Footer
-st.markdown("---")
+# ════════════════════════════════════════════════════════════════════
+#  TAB 6: RANKINGS
+# ════════════════════════════════════════════════════════════════════
+with tab6:
+    st.subheader("Company Rankings (RANK Window Function)")
+    
+    if company_ranking is not None and len(company_ranking) > 0:
+        st.info("Companies ranked by patent count using SQL RANK() window function")
+        st.dataframe(company_ranking.head(30), use_container_width=True, hide_index=True)
+
+# ════════════════════════════════════════════════════════════════════
+#  FOOTER
+# ════════════════════════════════════════════════════════════════════
+st.divider()
 st.markdown("""
-<div style='text-align: center; color: #999; font-size: 0.8rem;'>
-    PatentsView Technology Trends Dashboard | Data Pipeline Mini Project
-</div>
+    <div style='text-align: center; color: #999; font-size: 12px; padding: 15px;'>
+        <p>✅ Optimized Dashboard | Loads from Pre-Generated Reports</p>
+        <p>🔗 GitHub: <a href='https://github.com/broniaB2/Big-data-analysis-pipeline' target='_blank'>Big-data-analysis-pipeline</a></p>
+    </div>
 """, unsafe_allow_html=True)

@@ -23,6 +23,6 @@ data/
 .streamlit/
 
 # Generated files
-Reports/*.csv
+#Reports/*.csv
 Reports/*.json
 patents.db*

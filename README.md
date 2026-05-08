@@ -127,18 +127,29 @@ data/*.tsv.zip
 | `tech_by_decade.csv` | Dominant tech per decade |
 | `patent_report.json` | Full JSON report |
 
+**images of the Print console report
+![alt text](image.png)
+
+![alt text](image-1.png)
+
+![alt text](image-2.png)
+![alt text](image-4.png)
+![alt text](image-3.png)
+
+
 ---
 
 ---
 
 ## 📊 Interactive Dashboard
 
-**Streamlit-powered visualization** — Run to explore data interactively:
+**Live Dashboard (Streamlit Cloud):**
+🔗 **[Patent Analytics Dashboard](https://share.streamlit.io/broniaB2/big-data-analysis-pipeline/main/dashboard.py)** *(link will be active after deployment)*
 
+**Run Locally:**
 ```bash
 streamlit run dashboard.py
 ```
-
 Opens at `http://localhost:8501`
 
 **Dashboard Features:**
@@ -297,3 +308,5 @@ https://patentsview.org/download/data-download-tables
 License: Creative Commons Attribution 4.0
 
 **Last Updated:** May 2026 | **Status:** Production Ready
+
+
