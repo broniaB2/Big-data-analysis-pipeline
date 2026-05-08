@@ -128,12 +128,16 @@ data/*.tsv.zip
 | `patent_report.json` | Full JSON report |
 
 **images of the Print console report
+
+
 ![alt text](image.png)
 
 ![alt text](image-1.png)
 
 ![alt text](image-2.png)
+
 ![alt text](image-4.png)
+
 ![alt text](image-3.png)
 
 
