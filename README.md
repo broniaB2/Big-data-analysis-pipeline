@@ -166,6 +166,27 @@ Opens at `http://localhost:8501`
 - 🔍 Raw data explorer (4 tabs: Patents, Companies, Technologies, Relationships)
 
 ---
+**screenshots to the different tab of our dashboard/ how our dashboard looks like --
+1. Company Leadership
+![alt text](image.png)
+
+![alt text](image-1.png)
+
+![alt text](image-2.png)
+
+2. Year Trends
+
+![alt text](image-3.png)
+
+3. Technology Distribution
+
+![alt text](image-4.png)
+
+4. Growth Analysis
+
+![alt text](image-5.png)
+
+
 
 ## 🚀 Usage Examples
 
