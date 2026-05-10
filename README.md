@@ -168,6 +168,7 @@ Opens at `http://localhost:8501`
 ---
 **screenshots to the different tab of our dashboard/ how our dashboard looks like --
 1. Company Leadership
+   
 ![alt text](image.png)
 
 ![alt text](image-1.png)
@@ -255,33 +256,7 @@ con.close()
 
 ---
 
-## 🚀 GitHub & Deployment
 
-### GitHub Setup
-
-```bash
-# 1. Initialize Git Repository
-git init
-git config user.name "Your Name"
-git config user.email "your.email@example.com"
-
-# 2. Add all files
-git add .
-
-# 3. Create initial commit
-git commit -m "feat: Data pipeline with 500k+ sample processing and Streamlit dashboard
-
-- Increased sample size from 8,000 to 500,000 records per file
-- Added interactive Streamlit dashboard with 7 visualizations
-- Full dataset processing available (1M+ records without --sample flag)"
-
-# 4. Add remote repository
-git remote add origin https://github.com/yourusername/data-pipeline.git
-
-# 5. Push to GitHub
-git branch -M main
-git push -u origin main
-```
 
 ### Deployment Options
 
@@ -291,17 +266,6 @@ streamlit run dashboard.py
 # Visit: http://localhost:8501
 ```
 
-**Option B: Streamlit Cloud (Free)**
-1. Push code to GitHub
-2. Visit https://streamlit.io/cloud
-3. Click "New App" and select your GitHub repo
-4. Choose `dashboard.py` as main file
-5. Deploy with one click
-
-**Option C: Alternative Cloud Platforms**
-- Railway.app
-- Replit
-- Vercel (with Flask wrapper)
 
 ---
 
