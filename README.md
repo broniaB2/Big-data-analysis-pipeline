@@ -140,7 +140,7 @@ data/*.tsv.zip
 
 ![alt text](images/image-3.png)
 
-![alt text](images/image-5.png)
+
 
 
 ---
@@ -171,7 +171,7 @@ Opens at `http://localhost:8501`
 **screenshots to the different tab of our dashboard/ how our dashboard looks like --
 1. Company Leadership
 
-![alt text](images/image d.png)
+![alt text](images/image.png)
 
 ![alt text](images/image-d5.png)
 
@@ -187,7 +187,7 @@ Opens at `http://localhost:8501`
 
 4. Growth Analysis
 
-![alt text](images/WhatsApp Image 2026-05-10 at 19.48.15.jpeg)
+![alt text](images/image-5.png)
 
 
 
