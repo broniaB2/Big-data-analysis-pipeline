@@ -140,6 +140,8 @@ data/*.tsv.zip
 
 ![alt text](images/image-3.png)
 
+![alt text](images/image-5.png)
+
 
 ---
 
@@ -169,23 +171,23 @@ Opens at `http://localhost:8501`
 **screenshots to the different tab of our dashboard/ how our dashboard looks like --
 1. Company Leadership
 
-![alt text](images/image.png)
+![alt text](images/image d.png)
 
-![alt text](images/image-1.png)
+![alt text](images/image-d5.png)
 
-![alt text](images/image-2.png)
+![alt text](images/image-d6.png)
 
 2. Year Trends
 
-![alt text](images/image-3.png)
+![alt text](images/image-d7.png)
 
 3. Technology Distribution
 
-![alt text](images/image-4.png)
+![alt text](images/image-d8.png)
 
 4. Growth Analysis
 
-![alt text](images/image-5.png)
+![alt text](images/WhatsApp Image 2026-05-10 at 19.48.15.jpeg)
 
 
 
