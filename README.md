@@ -130,7 +130,7 @@ data/*.tsv.zip
 **images of the Print console report
 
 
-![alt text](images/image.png)
+![alt text](images/image-d.png)
 
 ![alt text](images/image-1.png)
 
